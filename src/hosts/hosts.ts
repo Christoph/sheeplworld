@@ -1,9 +1,11 @@
 import {Vector} from "../helper/vector"
+import {Vision} from "./vision"
 
 export class Sheep {
   // Attributes
   public type = "sheep";
-  private vision = 7;
+  private vision;
+  private vision_radius = 7;
   private herding_range = 4;
   private desired_separation = 3;
   private max_speed = 1;
@@ -28,6 +30,8 @@ export class Sheep {
     this.next_position = new Vector(position.x, position.y)
     // Initialize with random direction
     this.velocity = new Vector(this.get_random_float(-1, 1), this.get_random_float(-1, 1)).unit()
+    // Get vision indices
+    this.vision = new Vision(vision_radius)
   }
 
   // Generate random numbers within range
@@ -70,25 +74,19 @@ export class Sheep {
       if(host !== this) {
         let distance = this.position.distance(host.position);
 
-        if(distance <= this.vision ) {
+        if(distance <= this.vision_radius ) {
           this.neighbors.set(host, distance);
         }
       }
     }
 
     // Observe the landscape
-    for(let x = this.position.x - this.vision;x <= this.position.x + this.vision; x++) {
-      for(let y = this.position.y - this.vision;y <= this.position.y + this.vision; y++) {
-        let distance = this.position.distance(new Vector(x, y));
-
-        if(distance <= this.vision) {
-          this.surroundings.push({
-            d: distance,
-            type: grid[this.get_bounded_index(grid.length, x)][this.get_bounded_index(grid.length, y)],
-            position: new Vector(x, y)
-          });
-        }
-      }
+    for(let cell of this.vision.get_vision_indices(this.position)) {
+      this.surroundings.push({
+        d: this.position.distance(new Vector(cell[0], cell[1])),
+        type: grid[this.get_bounded_index(grid.length, cell[0])][this.get_bounded_index(grid.length, cell[1])],
+        position: new Vector(cell[0], cell[1])
+      });
     }
   }
 
