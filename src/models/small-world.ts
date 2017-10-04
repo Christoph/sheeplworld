@@ -1,6 +1,6 @@
 import {autoinject} from 'aurelia-framework';
 import {Sampling} from "../helper/sampling"
-import {Wolf, Sheep} from "../hosts/hosts"
+import {Sheep} from "../hosts/sheep"
 import {Vector} from "../helper/vector"
 import * as d3 from "d3"
 import * as _ from "lodash"
@@ -132,6 +132,7 @@ export class SmallWorld {
       host.simulate(this.temp_landscape_grid, this.host_list);
     }
 
+    console.log(this.host_list.length)
     // Update grid
     this.update_grid();
 

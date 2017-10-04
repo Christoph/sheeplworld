@@ -55,7 +55,10 @@ export class Vector {
       return this
     }
     else {
-      return new Vector(this.x / v, this.y / v);
+      this.x = this.x / v
+      this.y = this.y / v
+
+      return this
     }
   }
 
@@ -72,8 +75,10 @@ export class Vector {
   }
 
   limit(max_length) {
-    this.x = (max_length/this.length())*this.x;
-    this.y = (max_length/this.length())*this.y;
+    if(this.length() > max_length) {
+      this.x = (max_length/this.length())*this.x;
+      this.y = (max_length/this.length())*this.y;
+    }
 
     return this
   }
