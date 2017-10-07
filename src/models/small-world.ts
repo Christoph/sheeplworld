@@ -71,28 +71,39 @@ export class SmallWorld {
     }
   }
 
-  add_sheeps() {
+  add_sheeps(amount, desired_separation) {
     let found = false;
+    let positions = new Map();
+
     // Find grass area
     while(!found) {
       let x = this.get_random_int(0,this.grid_length-1);
       let y = this.get_random_int(0,this.grid_length-1)
       if(this.landscape_grid[x][y] == "grass_fresh") {
         found = true;
-
-        this.host_list.push(new Sheep(new Vector(x, y)));
-        this.host_list.push(new Sheep(new Vector(x-1, y)));
-        this.host_list.push(new Sheep(new Vector(x+1, y)));
-        this.host_list.push(new Sheep(new Vector(x, y+1)));
-        this.host_list.push(new Sheep(new Vector(x, y-1)));
-        this.host_list.push(new Sheep(new Vector(x+1, y+1)));
-        this.host_list.push(new Sheep(new Vector(x+2, y+1)));
-        this.host_list.push(new Sheep(new Vector(x+2, y)));
-        this.host_list.push(new Sheep(new Vector(x-1, y-1)));
+        positions.set(x+":"+y, [x, y])
       }
     }
 
-    // Add hosts
+    // Create all positions
+    while(positions.size < amount) {
+      let index = Math.floor(Math.random()*positions.size);
+      let start = Array.from(positions.values())[index]
+
+      let new_x = start[0] + this.get_random_int(-1,1)
+      let new_y = start[1] + this.get_random_int(-1,1)
+
+      if(!positions.has(new_x+":"+new_y) && this.landscape_grid[new_x][new_y] == "grass_fresh") {
+        positions.set(new_x+":"+new_y, [new_x, new_y])
+      }
+    }
+
+    // Add sheeps to host list
+    positions.forEach((value, key) => {
+      this.host_list.push(new Sheep(new Vector(value[0], value[1])));
+    })
+
+    // Add hosts to the grid
     this.place_hosts()
   }
 

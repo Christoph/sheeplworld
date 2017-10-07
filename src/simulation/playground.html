@@ -7,20 +7,24 @@
     <span>work in progress</span>
     <hr>
     <div class="row">
-        <div class="col-md-6">
-          <button class="btn btn-default btn-block" click.delegate="switch()">Toggle Parameter Selection</button>
+        <div class="col-md-3">
+          <button class="btn btn-default btn-block">Toggle Sheep Parameters</button>
           <div aubs-collapse="collapsed.bind: collapsed_input">
             <div style="margin-left:15px; margin-right:15px">
-                <label>Grid Length</label>
+                <label>Number of sheep</label>
                 <div class="row">
-                    <input type="text" id="grid_length"/>
+                    <input type="text" id="number_sheep"/>
                 </div>
-                <label>Maximum Mating Distance</label>
+                <label>Desired separation</label>
                 <div class="row">
-                    <input type="text" id="mating"/>
+                    <input type="text" id="desired_separation"/>
                 </div>
                 <br>
             </div>
+            <button class="btn btn-primary btn-block" click.delegate="add_sheeps()">
+                Add Sheeps
+            </button>
+
           </div>
           <div aubs-collapse="collapsed.bind: collapsed_grid">
 
@@ -39,7 +43,7 @@
               Stop Simulation
           </button>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-9">
           <div class="row">
             <spatial-grid
                 data.bind="data_grid"

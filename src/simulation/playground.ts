@@ -6,13 +6,11 @@ import * as d3 from "d3"
 @autoinject
 export class Playground {
     // Interface params
-    simulation_initialized = true;
-
     world;
 
-    // Population count
-    grid_selected = 100;
-    mating_selected = 1;
+    // Sheep params
+    number_sheep = 10;
+    desired_separation = 2;
 
     data_grid = <any[]> []
 
@@ -29,36 +27,29 @@ export class Playground {
       this.world = new SmallWorld(this.data_grid);
     }
 
-    switch() {
-      this.collapsed_input = this.collapsed_input == true ? false : true;
-      this.collapsed_grid = this.collapsed_grid == true ? false : true;
-      this.collapsed_out = this.collapsed_out == true ? false : true;
-    }
-
     attached() {
         // Attaching range sliders
-        $("#mating").ionRangeSlider({
+        $("#number_sheep").ionRangeSlider({
             min: 1,
-            max: 100,
-            from: 1,
+            max: 50,
+            from: 10,
             step: 1,
             type: "single",
             grid: true,
             grid_num: 10,
             onFinish: (data) => {
-              this.mating_selected = data["from"]
+              this.number_sheep = data["from"]
         }});
-        $("#grid_length").ionRangeSlider({
-            min: 10,
-            max: 1000,
-            from: 100,
+        $("#desired_separation").ionRangeSlider({
+            min: 1,
+            max: 10,
+            from: 2,
             step: 1,
             type: "single",
             grid: true,
-            grid_num: 10,
+            grid_num: 5,
             onFinish: (data) => {
-              this.redrawGrid()
-              this.grid_selected = data["from"]
+              this.desired_separation = data["from"]
         }});
     }
 
@@ -72,7 +63,11 @@ export class Playground {
 
     initializeWorld() {
       this.world.init_simulation()
-      this.simulation_initialized = false;
+    }
+
+    add_sheeps() {
+      this.world.add_sheeps(this.number_sheep, this.desired_separation)
+      this.redrawGrid()
     }
 
     compute() {
