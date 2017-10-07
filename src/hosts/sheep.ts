@@ -8,7 +8,7 @@ export class Sheep {
 
   private vision;
   private vision_radius = 7;
-  private herding_range = 4;
+  private herding_range = 5;
   private desired_separation = 2;
   private mating_threshold = 20;
   private maximum_age = 60;
