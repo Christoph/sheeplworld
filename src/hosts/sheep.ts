@@ -4,11 +4,12 @@ import {Vision} from "./vision"
 export class Sheep {
   // Attributes
   public type = "sheep";
+  public max_speed = 1;
+
   private vision;
   private vision_radius = 7;
   private herding_range = 4;
   private desired_separation = 2;
-  private max_speed = 1;
   private mating_threshold = 20;
   private maximum_age = 60;
 

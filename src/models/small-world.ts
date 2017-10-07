@@ -110,17 +110,17 @@ export class SmallWorld {
     }
 
     // Add host changes
-    for(var i = this.host_list.length -1; i >= 0 ; i--){
-      // Remove dead hosts
-      if(this.host_list[i].dead){
-          this.host_list.splice(i, 1);
-      }
-      else {
-        // Update host position
-        this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
-        this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
-      }
-    }
+    // for(var i = this.host_list.length -1; i >= 0 ; i--){
+    //   // Remove dead hosts
+    //   if(this.host_list[i].dead){
+    //       this.host_list.splice(i, 1);
+    //   }
+    //   else {
+    //     // Update host position
+    //     this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
+    //     this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
+    //   }
+    // }
   }
 
   run_iteration() {
@@ -132,12 +132,115 @@ export class SmallWorld {
       host.simulate(this.temp_landscape_grid, this.host_list);
     }
 
-    console.log(this.host_list.length)
     // Update grid
     this.update_grid();
 
+    // Resolve deciscions
+    this.resolve()
+
     // Increase simulation counter
     this.simulation_iterations++;
+  }
+
+  resolve() {
+    let current_state= new Set();
+    let conflicts = new Map();
+    let speeds = [];
+    let hosts_at_position = []
+
+    // Sort hosts by speed (ascending)
+    this.host_list.sort((a, b) => a.max_speed - b.max_speed);
+
+    // Find conflicts and remove dead hosts
+    for(var i = this.host_list.length -1; i >= 0 ; i--){
+      // Remove dead hosts
+      if(this.host_list[i].dead){
+        this.host_list.splice(i, 1);
+      }
+      else {
+        let host = this.host_list[i];
+        let position = host.position.toString();
+        let next_position = host.next_position.toString();
+
+        // Add speed to the speeds array
+        if(!speeds.includes(host.max_speed)) speeds.push(host.max_speed)
+
+        // Get current state
+        current_state.add(position)
+
+        // Get conflicts
+        if(conflicts.has(next_position)) {
+          hosts_at_position = conflicts.get(next_position);
+          hosts_at_position.push(host)
+
+          conflicts.set(next_position, hosts_at_position)
+        }
+        else {
+          conflicts.set(next_position, [host])
+        }
+      }
+    }
+
+    // Resolve conflicts and update positions
+    speeds.sort((a, b) => b - a).forEach(speed => {
+      conflicts.forEach((value, key) => {
+        let temp = value.filter( x => x.max_speed == speed)
+
+        // Resolve cases
+        if(temp.length == 1 && current_state.has(key)) {
+          // No conflict but at target position is somewhere else
+          this.move_host_until_contact(current_state, key, temp[0])
+        }
+        else if(temp.length == 1 && !current_state.has(key)) {
+          // Update current state
+          this.move_host(current_state, key, temp[0])
+        }
+        else if(temp.length > 1 && !current_state.has(key)) {
+          // Get random host
+          let index = Math.floor(Math.random()*temp.length);
+          let host = temp.splice(index, 1);
+
+          // Move random host
+          this.move_host(current_state, key, host[0])
+
+          // Move remaining hosts
+          // TODO: Random drawing
+          for(let i = 0; i < temp.length; i++) {
+            host = temp[i];
+
+            this.move_host_until_contact(current_state, key, host)
+          }
+        }
+        else if(temp.length > 1 && current_state.has(key)) {
+          // TODO: Random drawing
+          for(let i = 0; i < temp.length; i++) {
+            let host = temp[i];
+
+            this.move_host_until_contact(current_state, key, host)
+          }
+        }
+        else {
+          console.log("ERROR")
+          console.log(key, value, speed)
+        }
+      })
+    })
+  }
+
+  move_host(current_state, key, host) {
+    // Update current state
+    current_state.add(key)
+    current_state.delete(host.position.toString())
+
+    // Move
+    host.position = host.next_position.clone();
+    this.grid[host.position.x][host.position.y] = host.type;
+  }
+
+  move_host_until_contact(current_state, key, host) {
+    // Wait TODO:Move as far as possible
+    host.next_position = host.position.clone();
+    this.grid[host.position.x][host.position.y] = host.type;
   }
 
   get_bounded_index(grid_length, index) {

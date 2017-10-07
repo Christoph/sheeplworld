@@ -92,7 +92,7 @@ export class SpatialGrid {
 
   redrawChanged() {
     if(this.svg) {
-      this.redrawGridNecessary = true;
+      this.update_grid();
     }
   }
 

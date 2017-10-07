@@ -125,4 +125,8 @@ export class Vector {
 
     return bounded_index
   }
+
+  toString() {
+    return "["+this.x+","+this.y+"]"
+  }
 }
