@@ -4,7 +4,7 @@ import {Vision} from "./vision"
 export class Sheep {
   // Attributes
   public type = "sheep";
-  public max_speed = 1;
+  public current_speed = 0;
 
   private vision;
   private vision_radius = 7;
@@ -12,6 +12,7 @@ export class Sheep {
   private desired_separation = 2;
   private mating_threshold = 20;
   private maximum_age = 60;
+  private max_speed = 1;
 
   private dead = false;
   private age = 1;
@@ -247,6 +248,8 @@ export class Sheep {
     this.velocity.add(total_movement).limit(this.max_speed)
 
     this.next_position.add(this.velocity)
+
+    this.current_speed = (this.position.distance(this.next_position) - this.max_speed) * -1
 
     // Prepare for discrete grid
     this.next_position.discretize().wrap(grid.length)

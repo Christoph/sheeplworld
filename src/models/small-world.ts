@@ -149,7 +149,7 @@ export class SmallWorld {
     let hosts_at_position = []
 
     // Sort hosts by speed (ascending)
-    this.host_list.sort((a, b) => a.max_speed - b.max_speed);
+    this.host_list.sort((a, b) => a.current_speed - b.current_speed);
 
     // Find conflicts and remove dead hosts
     for(var i = this.host_list.length -1; i >= 0 ; i--){
@@ -163,7 +163,7 @@ export class SmallWorld {
         let next_position = host.next_position.toString();
 
         // Add speed to the speeds array
-        if(!speeds.includes(host.max_speed)) speeds.push(host.max_speed)
+        if(!speeds.includes(host.current_speed)) speeds.push(host.current_speed)
 
         // Get current state
         current_state.add(position)
@@ -184,7 +184,7 @@ export class SmallWorld {
     // Resolve conflicts and update positions
     speeds.sort((a, b) => b - a).forEach(speed => {
       conflicts.forEach((value, key) => {
-        let temp = value.filter( x => x.max_speed == speed)
+        let temp = value.filter( x => x.current_speed == speed)
 
         // Resolve cases
         if(temp.length == 1 && current_state.has(key)) {
