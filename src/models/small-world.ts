@@ -47,7 +47,7 @@ export class SmallWorld {
       noise_map.push(temp)
     }
 
-    // Initilize landscape and host grids
+    // Initilize landscape
     for(let i = 0; i < this.grid_length; i++) {
       let temp_landscape = []
 
@@ -65,7 +65,13 @@ export class SmallWorld {
       this.landscape_grid.push(temp_landscape)
     }
 
-    // Add initial hosts
+    // Add initial data to grid
+    for(let i = 0; i < this.grid_length; i++) {
+      this.grid.push(_.clone(this.landscape_grid[i]))
+    }
+  }
+
+  add_sheeps() {
     let found = false;
     // Find grass area
     while(!found) {
@@ -86,12 +92,11 @@ export class SmallWorld {
       }
     }
 
-    // Add initial data to grid
-    for(let i = 0; i < this.grid_length; i++) {
-      this.grid.push(_.clone(this.landscape_grid[i]))
-    }
-
     // Add hosts
+    this.place_hosts()
+  }
+
+  place_hosts() {
     for (var host of this.host_list) {
       this.grid[this.get_bounded_index(this.grid.length, host.position.x)][this.get_bounded_index(this.grid.length, host.position.y)] = host.type;
     }
@@ -108,19 +113,6 @@ export class SmallWorld {
       // Add landscape changes
       this.grid.push(_.clone(this.landscape_grid[i]))
     }
-
-    // Add host changes
-    // for(var i = this.host_list.length -1; i >= 0 ; i--){
-    //   // Remove dead hosts
-    //   if(this.host_list[i].dead){
-    //       this.host_list.splice(i, 1);
-    //   }
-    //   else {
-    //     // Update host position
-    //     this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
-    //     this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
-    //   }
-    // }
   }
 
   run_iteration() {
@@ -181,7 +173,6 @@ export class SmallWorld {
       }
     }
 
-    console.log("New")
     // Resolve conflicts and update positions
     speeds.sort((a, b) => b - a).forEach(speed => {
       conflicts.forEach((value, key) => {

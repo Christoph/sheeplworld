@@ -86,7 +86,7 @@ export class SpatialGrid {
         this.draw_grid()
         this.redrawGridNecessary = false;
       }
-      this.update_grid();
+      // this.update_grid();
     }
   }
 
