@@ -210,7 +210,9 @@ export class SmallWorld {
           this.remove_resolved(conflicts, key, value, host)
 
           // Move remaining hosts
-          // TODO: Random drawing
+          if(temp.length > 1) {
+            temp = this.shuffle(temp)
+          }
           for(let i = 0; i < temp.length; i++) {
             host = temp[i];
 
@@ -219,7 +221,7 @@ export class SmallWorld {
           }
         }
         else if(temp.length > 1 && current_state.has(key)) {
-          // TODO: Random drawing
+          temp = this.shuffle(temp)
           for(let i = 0; i < temp.length; i++) {
             let host = temp[i];
 
@@ -227,10 +229,6 @@ export class SmallWorld {
             this.remove_resolved(conflicts, key, value, host)
           }
         }
-        // else {
-        //   console.log("ERROR")
-        //   console.log(key, value, speed, temp)
-        // }
       })
     })
   }
@@ -281,5 +279,24 @@ export class SmallWorld {
     }
 
     return bounded_index
+  }
+
+  shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    return array;
   }
 }
