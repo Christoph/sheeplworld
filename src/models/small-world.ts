@@ -181,6 +181,7 @@ export class SmallWorld {
       }
     }
 
+    console.log("New")
     // Resolve conflicts and update positions
     speeds.sort((a, b) => b - a).forEach(speed => {
       conflicts.forEach((value, key) => {
@@ -190,18 +191,21 @@ export class SmallWorld {
         if(temp.length == 1 && current_state.has(key)) {
           // No conflict but at target position is somewhere else
           this.move_host_until_contact(current_state, key, temp[0])
+          this.remove_resolved(conflicts, key, value, temp[0])
         }
         else if(temp.length == 1 && !current_state.has(key)) {
           // Update current state
           this.move_host(current_state, key, temp[0])
+          this.remove_resolved(conflicts, key, value, temp[0])
         }
         else if(temp.length > 1 && !current_state.has(key)) {
           // Get random host
           let index = Math.floor(Math.random()*temp.length);
-          let host = temp.splice(index, 1);
+          let host = temp.splice(index, 1)[0];
 
           // Move random host
-          this.move_host(current_state, key, host[0])
+          this.move_host(current_state, key, host)
+          this.remove_resolved(conflicts, key, value, host)
 
           // Move remaining hosts
           // TODO: Random drawing
@@ -209,6 +213,7 @@ export class SmallWorld {
             host = temp[i];
 
             this.move_host_until_contact(current_state, key, host)
+            this.remove_resolved(conflicts, key, value, host)
           }
         }
         else if(temp.length > 1 && current_state.has(key)) {
@@ -217,14 +222,34 @@ export class SmallWorld {
             let host = temp[i];
 
             this.move_host_until_contact(current_state, key, host)
+            this.remove_resolved(conflicts, key, value, host)
           }
         }
-        else {
-          console.log("ERROR")
-          console.log(key, value, speed)
-        }
+        // else {
+        //   console.log("ERROR")
+        //   console.log(key, value, speed, temp)
+        // }
       })
     })
+  }
+
+  remove_resolved(conflicts: Map<any, any>, key, value, host) {
+    if(value.length > 1) {
+      // Get index of resolved host
+      let index = value.findIndex(x => x === host)
+
+      // Remove resolved host
+      value.splice(index, 1)
+
+      if(value.length == 0) {
+        conflicts.delete(key)
+      }
+    }
+    else {
+      // Remove position where all conflicts are resolved
+      conflicts.delete(key)
+    }
+
   }
 
   move_host(current_state, key, host) {
