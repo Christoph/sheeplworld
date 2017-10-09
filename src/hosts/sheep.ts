@@ -1,4 +1,5 @@
 import {Vector} from "../helper/vector"
+import {Movement} from "./movements"
 import {Vision} from "./vision"
 
 export class Sheep {
@@ -12,6 +13,7 @@ export class Sheep {
   private mating_threshold;
   private maximum_age;
   private max_speed;
+  private movement_type;
 
   // Changing
   public current_speed = 0;
@@ -44,6 +46,9 @@ export class Sheep {
 
     // Get vision indices class
     this.vision = new Vision(this.vision_radius)
+
+    // Get movement type
+    this.movement_type = new Movement("flock");
   }
 
   // Generate random numbers within range
@@ -149,7 +154,7 @@ export class Sheep {
       this.flock_weight = this.flock_weight*2;
     }
 
-    flock_movement = this.flock(sheeps_around)
+    flock_movement = this.movement_type.move(this, sheeps_around)
     feed_movement = this.feed(this.surroundings)
     mate_movement = this.find_partner(sheeps_around)
 
@@ -193,10 +198,10 @@ export class Sheep {
     })
 
     if(partner instanceof Sheep) {
-      return this.move_to(partner.position)
+      return this.movement_type.move_to(this, partner.position)
     }
     else {
-      return this.move_to(this.position)
+      return this.movement_type.move_to(this, this.position)
     }
   }
 
@@ -234,7 +239,7 @@ export class Sheep {
       counter++;
     })
 
-    return this.move_to(mean.divide(counter)).multiply(nearest_distance+1)
+    return this.movement_type.move_to(this, mean.divide(counter)).multiply(nearest_distance+1)
   }
 
   hungry() {
@@ -254,77 +259,6 @@ export class Sheep {
 
     // Prepare for discrete grid
     this.next_position.discretize().wrap(grid.length)
-  }
-
-  flock(neighbors) {
-    let separation: Vector = this.separate(neighbors).multiply(4)
-    let alignment: Vector = this.align(neighbors).multiply(2)
-    let cohesion: Vector = this.cohere(neighbors)
-
-    return separation.add(alignment).add(cohesion)
-  }
-
-  cohere(neighbors) {
-    let sum = new Vector(0, 0);
-
-    neighbors.forEach(n => {
-      sum.add(n.position)
-    })
-
-    return this.move_to(sum.divide(neighbors.length))
-  }
-
-  align(neighbors) {
-    let mean = new Vector(0, 0)
-
-
-    neighbors.forEach(n => {
-      mean.add(n.velocity)
-    })
-
-    if(mean.length() > 0) {
-      mean.divide(neighbors.length)
-      mean.limit(5)
-    }
-
-    return mean
-  }
-
-  separate(neighbors) {
-    let mean = new Vector(0, 0)
-    let counter = 0;
-
-    neighbors.forEach(n => {
-      let distance = n.position.distance(this.position)
-
-      if(distance > 0  && distance < this.desired_separation) {
-        mean.add(this.position.clone().subtract(n.position).unit())
-        counter++;
-      }
-      if(distance == 0) {
-        // mean.add(this.position.clone().add(n.position).unit())
-        mean.add(n.velocity.multiply(-1).unit())
-        counter++;
-      }
-    })
-
-    if(mean.length() > 0) {
-      mean.divide(counter)
-    }
-
-    return mean
-  }
-
-  move_to(target : Vector) {
-    let target_position = target.clone().subtract(this.position);
-    let distance = target_position.length();
-
-    if(distance > 0) {
-      return target_position.unit().subtract(this.velocity)
-    }
-    else {
-      return this.velocity.clone()
-    }
   }
 
   get_bounded_index(grid_length, index) {

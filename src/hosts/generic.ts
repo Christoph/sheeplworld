@@ -2,7 +2,7 @@ import {Vector} from "../helper/vector"
 
 export class Generic {
   constructor() {
-    
+
   }
 
   get_vision_indices(radius) {
@@ -18,4 +18,8 @@ export class Generic {
     }
 
   }
+}
+
+export class Host {
+  
 }
