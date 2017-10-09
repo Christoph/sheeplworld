@@ -3,17 +3,18 @@ import {Vision} from "./vision"
 
 export class Sheep {
   // Attributes
+  // Constant
   public type = "sheep";
-  public current_speed = 0;
 
   private vision;
-  private vision_radius = 7;
-  private herding_range = 5;
-  private desired_separation = 2;
-  private mating_threshold = 20;
-  private maximum_age = 60;
-  private max_speed = 1;
+  private vision_radius;
+  private herding_range;
+  private mating_threshold;
+  private maximum_age;
+  private max_speed;
 
+  // Changing
+  public current_speed = 0;
   private dead = false;
   private age = 1;
   private saturation = 2;
@@ -27,13 +28,21 @@ export class Sheep {
   private flock_weight = 1;
   private feed_weight = 1;
 
-  constructor(private position: Vector) {
+  constructor(private position: Vector, private desired_separation) {
     // Initialize next position
     this.next_position = position.clone()
-
     // Initialize with random direction
     this.velocity = new Vector(this.get_random_float(-1, 1), this.get_random_float(-1, 1)).unit()
-    // Get vision indices
+
+    // Set initial parameters
+    // this.desired_separation = 2;
+    this.vision_radius = 7;
+    this.herding_range = 5;
+    this.mating_threshold = 20;
+    this.maximum_age = 60;
+    this.max_speed = 1;
+
+    // Get vision indices class
     this.vision = new Vision(this.vision_radius)
   }
 
@@ -196,7 +205,10 @@ export class Sheep {
       let n = neighbors[i]
       if(this.position.distance(n.position) < 2 && n.willingness >= this.mating_threshold) {
         // Create new sheep
-        host_list.push(new Sheep(new Vector(this.position.x, this.position.y)))
+        host_list.push(new Sheep(
+          new Vector(this.position.x, this.position.y),
+          Math.random() > 0.5 ? this.desired_separation : n.desired_separation
+        ))
 
         // Reset willingsness
         this.willingness = 0;
@@ -221,17 +233,6 @@ export class Sheep {
       mean.add(n.position)
       counter++;
     })
-
-    // surroundings.forEach(n => {
-    //   if(n.type == "grass_fresh") {
-    //     mean.add(n.position)
-    //     counter++;
-    //   }
-    //   if(n.type == "grass") {
-    //     mean.add(n.position)
-    //     counter++;
-    //   }
-    // })
 
     return this.move_to(mean.divide(counter)).multiply(nearest_distance+1)
   }

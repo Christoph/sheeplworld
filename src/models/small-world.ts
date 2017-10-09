@@ -100,7 +100,7 @@ export class SmallWorld {
 
     // Add sheeps to host list
     positions.forEach((value, key) => {
-      this.host_list.push(new Sheep(new Vector(value[0], value[1])));
+      this.host_list.push(new Sheep(new Vector(value[0], value[1]), desired_separation));
     })
 
     // Add hosts to the grid
@@ -143,6 +143,7 @@ export class SmallWorld {
 
     // Increase simulation counter
     this.simulation_iterations++;
+    console.log(this.host_list.length)
   }
 
   resolve() {
