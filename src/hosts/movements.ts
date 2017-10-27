@@ -53,7 +53,6 @@ export class Movement {
 
     if(mean.length() > 0) {
       mean.divide(neighbors.size)
-      mean.limit(5)
     }
 
     return mean
