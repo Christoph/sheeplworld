@@ -5,7 +5,7 @@ export class Movement {
 
   }
 
-  move(host, neighbors) {
+  move(host, neighbors: Map<any, any>) {
     if(this.type == "flock") {
       return this.flock(host, neighbors)
     }
@@ -26,7 +26,7 @@ export class Movement {
     }
   }
 
-  private flock(host, neighbors) {
+  private flock(host, neighbors: Map<any, any>) {
     let separation: Vector = this.separate(host, neighbors).multiply(4)
     let alignment: Vector = this.align(neighbors).multiply(2)
     let cohesion: Vector = this.cohere(host, neighbors)
@@ -34,37 +34,36 @@ export class Movement {
     return separation.add(alignment).add(cohesion)
   }
 
-  private cohere(host, neighbors) {
+  private cohere(host, neighbors: Map<any, any>) {
     let sum = new Vector(0, 0);
 
-    neighbors.forEach(n => {
+    neighbors.forEach((d, n) => {
       sum.add(n.position)
     })
 
-    return this.move_to(host, sum.divide(neighbors.length))
+    return this.move_to(host, sum.divide(neighbors.size))
   }
 
-  private align(neighbors) {
+  private align(neighbors: Map<any, any>) {
     let mean = new Vector(0, 0)
 
-
-    neighbors.forEach(n => {
+    neighbors.forEach((d, n) => {
       mean.add(n.velocity)
     })
 
     if(mean.length() > 0) {
-      mean.divide(neighbors.length)
+      mean.divide(neighbors.size)
       mean.limit(5)
     }
 
     return mean
   }
 
-  private separate(host, neighbors) {
+  private separate(host, neighbors: Map<any, any>) {
     let mean = new Vector(0, 0)
     let counter = 0;
 
-    neighbors.forEach(n => {
+    neighbors.forEach((d, n) => {
       let distance = n.position.distance(host.position)
 
       if(distance > 0  && distance < host.desired_separation) {

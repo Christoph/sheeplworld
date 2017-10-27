@@ -1,5 +1,5 @@
 import {autoinject} from 'aurelia-framework';
-import {Sampling} from "../helper/sampling"
+import {Helper} from "../helper/helper"
 import {Sheep} from "../hosts/sheep"
 import {Vector} from "../helper/vector"
 import * as d3 from "d3"
@@ -109,7 +109,7 @@ export class SmallWorld {
 
   place_hosts() {
     for (var host of this.host_list) {
-      this.grid[this.get_bounded_index(this.grid.length, host.position.x)][this.get_bounded_index(this.grid.length, host.position.y)] = host.type;
+      this.grid[Helper.get_bounded_index(this.grid.length, host.position.x)][Helper.get_bounded_index(this.grid.length, host.position.y)] = host.type;
     }
   }
 
@@ -212,7 +212,7 @@ export class SmallWorld {
 
           // Move remaining hosts
           if(temp.length > 1) {
-            temp = this.shuffle(temp)
+            temp = Helper.shuffle(temp)
           }
           for(let i = 0; i < temp.length; i++) {
             host = temp[i];
@@ -222,7 +222,7 @@ export class SmallWorld {
           }
         }
         else if(temp.length > 1 && current_state.has(key)) {
-          temp = this.shuffle(temp)
+          temp = Helper.shuffle(temp)
           for(let i = 0; i < temp.length; i++) {
             let host = temp[i];
 
@@ -267,37 +267,5 @@ export class SmallWorld {
     // Wait TODO:Move as far as possible
     host.next_position = host.position.clone();
     this.grid[host.position.x][host.position.y] = host.type;
-  }
-
-  get_bounded_index(grid_length, index) {
-    let bounded_index = index;
-
-    if(index < 0) {
-      bounded_index = index + grid_length;
-    }
-    if(index >= grid_length) {
-      bounded_index = index - grid_length;
-    }
-
-    return bounded_index
-  }
-
-  shuffle(array) {
-    var currentIndex = array.length, temporaryValue, randomIndex;
-
-    // While there remain elements to shuffle...
-    while (0 !== currentIndex) {
-
-      // Pick a remaining element...
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex -= 1;
-
-      // And swap it with the current element.
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
-    }
-
-    return array;
   }
 }

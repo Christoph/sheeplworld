@@ -16,10 +16,5 @@ export class Generic {
 
       }
     }
-
   }
-}
-
-export class Host {
-  
 }

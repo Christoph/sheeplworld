@@ -1,63 +1,19 @@
 import {Vector} from "../helper/vector"
+import {Helper} from "../helper/helper"
 import {Movement} from "./movements"
 import {Vision} from "./vision"
+import {Host} from "./host"
 
-export class Sheep {
+export class Sheep extends Host {
   // Attributes
-  // Constant
-  public type = "sheep";
-
-  private vision;
-  private vision_radius;
-  private herding_range;
-  private mating_threshold;
-  private maximum_age;
-  private max_speed;
-  private movement_type;
-
-  // Changing
   public current_speed = 0;
-  private dead = false;
-  private age = 1;
-  private saturation = 2;
-  private willingness = 10;
-  private neighbors = new Map();
-  private surroundings = [];
-  private velocity;
-  private next_position;
 
   private mate_weight = 1;
   private flock_weight = 1;
   private feed_weight = 1;
 
-  constructor(private position: Vector, private desired_separation) {
-    // Initialize next position
-    this.next_position = position.clone()
-    // Initialize with random direction
-    this.velocity = new Vector(this.get_random_float(-1, 1), this.get_random_float(-1, 1)).unit()
-
-    // Set initial parameters
-    // this.desired_separation = 2;
-    this.vision_radius = 7;
-    this.herding_range = 5;
-    this.mating_threshold = 20;
-    this.maximum_age = 60;
-    this.max_speed = 1;
-
-    // Get vision indices class
-    this.vision = new Vision(this.vision_radius)
-
-    // Get movement type
-    this.movement_type = new Movement("flock");
-  }
-
-  // Generate random numbers within range
-  get_random_int(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  get_random_float(min, max) {
-    return Math.random() * (max - min + 1) + min;
+  constructor(protected position: Vector, protected desired_separation) {
+    super("sheep", Sheep, position, 7, 20, 60, 1, {type:"flock", herding_range: 5, desired_separation: desired_separation});
   }
 
   // Basic decision function
@@ -67,49 +23,9 @@ export class Sheep {
     this.update_host(host_list);
   }
 
-  update_host(host_list) {
-    this.saturation--;
-    this.willingness++;
-    this.age++;
-
-    if(this.saturation <= 0) {
-      this.dead = true;
-    }
-
-    if(this.age > this.maximum_age) {
-      this.dead = true;
-    }
-  }
-
-  look(grid, host_list) {
-    this.neighbors.clear();
-    this.surroundings.length = 0;
-
-    // Check for other hosts
-    // TODO: Check only surroundings?
-    for(let host of host_list) {
-      if(host !== this) {
-        let distance = this.position.distance(host.position);
-
-        if(distance <= this.vision_radius ) {
-          this.neighbors.set(host, distance);
-        }
-      }
-    }
-
-    // Observe the landscape
-    for(let cell of this.vision.get_vision_indices(this.position)) {
-      this.surroundings.push({
-        d: this.position.distance(new Vector(cell[0], cell[1])),
-        type: grid[this.get_bounded_index(grid.length, cell[0])][this.get_bounded_index(grid.length, cell[1])],
-        position: new Vector(cell[0], cell[1])
-      });
-    }
-  }
-
   decide(grid, host_list) {
-    let sheeps_around = [];
-    let predators_around = [];
+    // let sheeps_around = [];
+    // let predators_around = [];
 
     this.mate_weight = 1;
     this.flock_weight = 1;
@@ -121,14 +37,14 @@ export class Sheep {
     let total_movement: Vector;
 
     // Analyse surroundings
-    this.neighbors.forEach((value, key) => {
-      if(key.type == "sheep" && value <= this.herding_range) {
-        sheeps_around.push(key);
-      }
-      if(key.type == "wolf" && value <= this.herding_range) {
-        predators_around.push(key)
-      }
-    })
+    // this.neighbors.forEach((value, key) => {
+    //   if(key.type == "sheep" && value <= this.vision_radius) {
+    //     sheeps_around.push(key);
+    //   }
+    //   if(key.type == "wolf" && value <= this.vision_radius) {
+    //     predators_around.push(key)
+    //   }
+    // })
 
     // decide based on importance
     if(this.hungry()) {
@@ -141,7 +57,7 @@ export class Sheep {
     }
 
     if(this.willingness >= this.mating_threshold) {
-      if(this.mate(sheeps_around, host_list)) {
+      if(this.mate(host_list)) {
         this.mate_weight = this.mate_weight*0.5;
       }
       else {
@@ -149,14 +65,13 @@ export class Sheep {
       }
     }
 
-    if(predators_around.length > 0) {
-      this.mate_weight = this.mate_weight*0.1;
-      this.flock_weight = this.flock_weight*2;
-    }
-
-    flock_movement = this.movement_type.move(this, sheeps_around)
+    // if(predators_around.length > 0) {
+    //   this.mate_weight = this.mate_weight*0.1;
+    //   this.flock_weight = this.flock_weight*2;
+    // }
+    flock_movement = this.move(this.neighbors)
     feed_movement = this.feed(this.surroundings)
-    mate_movement = this.find_partner(sheeps_around)
+    mate_movement = this.find_partner()
 
     flock_movement.multiply(this.flock_weight);
     feed_movement.multiply(this.feed_weight);
@@ -164,93 +79,10 @@ export class Sheep {
 
     total_movement = flock_movement.add(feed_movement).add(mate_movement)
 
-    this.movement(grid, total_movement.divide(3));
+    this.move_host(grid, total_movement.divide(3));
   }
 
-  eat(grid) {
-    let type = grid[this.position.x][this.position.y];
-
-    if(type == "grass_fresh") {
-      this.saturation += 5;
-      grid[this.position.x][this.position.y] = "grass"
-
-      return true
-    }
-    else if(type == "grass") {
-      this.saturation += 2;
-
-      return true
-    }
-
-    return false
-  }
-
-  find_partner(neighbors) {
-    let distance = this.vision_radius;
-    let available_partners = neighbors.filter(cell => cell.saturation > 5);
-    let partner;
-
-    available_partners.forEach(n => {
-      if(this.position.distance(n.position) < distance) {
-        distance = this.position.distance(n.position);
-        partner = n;
-      }
-    })
-
-    if(partner instanceof Sheep) {
-      return this.movement_type.move_to(this, partner.position)
-    }
-    else {
-      return this.movement_type.move_to(this, this.position)
-    }
-  }
-
-  mate(neighbors, host_list) {
-    for(let i = 0; i < neighbors.length; i++) {
-      let n = neighbors[i]
-      if(this.position.distance(n.position) < 2 && n.willingness >= this.mating_threshold) {
-        // Create new sheep
-        host_list.push(new Sheep(
-          new Vector(this.position.x, this.position.y),
-          Math.random() > 0.5 ? this.desired_separation : n.desired_separation
-        ))
-
-        // Reset willingsness
-        this.willingness = 0;
-        n.willingness = 0;
-
-        //Break out of loop
-        return true;
-      }
-    }
-
-    return false
-  }
-
-  // Looking for fresh grass
-  feed(surroundings) {
-    let mean = new Vector(0, 0);
-    let nearest_fresh_grass = surroundings.filter(cell => cell.type == "grass_fresh")
-    let nearest_distance = Math.min(this.vision_radius, Math.min.apply(Math, nearest_fresh_grass.map(function(o){return o.d;})))
-    let counter = 0;
-
-    nearest_fresh_grass.forEach(n => {
-      mean.add(n.position)
-      counter++;
-    })
-
-    return this.movement_type.move_to(this, mean.divide(counter)).multiply(nearest_distance+1)
-  }
-
-  hungry() {
-    let rnd = Math.random()
-    if(this.saturation > 8) return false;
-    if(this.saturation <= 8 && this.saturation > 4 && rnd < 0.2) return true;
-    if(this.saturation <= 4 && this.saturation > 1 && rnd < 0.8) return true;
-    if(this.saturation <= 1) return true;
-  }
-
-  movement(grid, total_movement) {
+  move_host(grid, total_movement) {
     this.velocity.add(total_movement).limit(this.max_speed)
 
     this.next_position.add(this.velocity)
@@ -259,18 +91,5 @@ export class Sheep {
 
     // Prepare for discrete grid
     this.next_position.discretize().wrap(grid.length)
-  }
-
-  get_bounded_index(grid_length, index) {
-    let bounded_index = index;
-
-    if(index < 0) {
-      bounded_index = index + grid_length;
-    }
-    if(index >= grid_length) {
-      bounded_index = index - grid_length;
-    }
-
-    return bounded_index
   }
 }
