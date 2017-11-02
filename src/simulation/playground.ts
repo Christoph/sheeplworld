@@ -16,9 +16,10 @@ export class Playground {
 
     current_filter = new Set();
 
-    collapsed_input = false;
-    collapsed_grid = false;
-    collapsed_out = true;
+    collapsed_sheep = true;
+    collapsed_wolf = true;
+
+    not_initialized = true;
 
     timeout;
     redraw;
@@ -63,6 +64,11 @@ export class Playground {
 
     initializeWorld() {
       this.world.init_simulation()
+      this.not_initialized = false;
+    }
+
+    toggleSheep() {
+      this.collapsed_sheep = this.collapsed_sheep == true ? false : true;
     }
 
     add_sheeps() {

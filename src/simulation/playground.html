@@ -8,8 +8,11 @@
     <hr>
     <div class="row">
         <div class="col-md-3">
-          <button class="btn btn-default btn-block">Toggle Sheep Parameters</button>
-          <div aubs-collapse="collapsed.bind: collapsed_input">
+          <button class="btn btn-primary btn-block" click.delegate="initializeWorld()">
+              Initialize Simulation
+          </button>
+          <button class="btn btn-default btn-block" click.delegate="toggleSheep()" disabled.bind="not_initialized">Toggle Sheep Parameters</button>
+          <div aubs-collapse="collapsed.bind: collapsed_sheep">
             <div style="margin-left:15px; margin-right:15px">
                 <label>Number of sheep</label>
                 <div class="row">
@@ -25,17 +28,13 @@
                 Add Sheeps
             </button>
 
+
           </div>
-          <div aubs-collapse="collapsed.bind: collapsed_grid">
+          <div aubs-collapse="collapsed.bind: collapsed_wolf">
 
           </div>
           <br>
-          <div aubs-collapse="collapsed.bind: collapsed_out">
 
-          </div>
-          <button class="btn btn-primary btn-block" click.delegate="initializeWorld()">
-              Initialize Simulation
-          </button>
           <button disabled.bind="simulation_initialized" class="btn btn-success btn-block" click.delegate="compute()">
               Run Simulation
           </button>
