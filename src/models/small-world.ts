@@ -16,7 +16,7 @@ export class SmallWorld {
   grid_length = 100;
   landscape_grid = [];
   temp_landscape_grid = [];
-  host_list = [];
+  host_list = new Map();
 
   // Global params
   max_mating_distance = 1;
@@ -90,8 +90,8 @@ export class SmallWorld {
       let index = Math.floor(Math.random()*positions.size);
       let start = Array.from(positions.values())[index]
 
-      let new_x = start[0] + this.get_random_int(-1,1)
-      let new_y = start[1] + this.get_random_int(-1,1)
+      let new_x = Helper.get_bounded_index(this.grid.length, start[0] + this.get_random_int(-1,1))
+      let new_y = Helper.get_bounded_index(this.grid.length, start[1] + this.get_random_int(-1,1))
 
       if(!positions.has(new_x+":"+new_y) && this.landscape_grid[new_x][new_y] == "grass_fresh") {
         positions.set(new_x+":"+new_y, [new_x, new_y])
@@ -100,7 +100,7 @@ export class SmallWorld {
 
     // Add sheeps to host list
     positions.forEach((value, key) => {
-      this.host_list.push(new Sheep(new Vector(value[0], value[1]), desired_separation));
+      this.host_list.set(value[0] +","+value[1], new Sheep(new Vector(value[0], value[1]), desired_separation));
     })
 
     // Add hosts to the grid
@@ -108,9 +108,9 @@ export class SmallWorld {
   }
 
   place_hosts() {
-    for (var host of this.host_list) {
-      this.grid[Helper.get_bounded_index(this.grid.length, host.position.x)][Helper.get_bounded_index(this.grid.length, host.position.y)] = host.type;
-    }
+    this.host_list.forEach((host, position) => {
+        this.grid[Helper.get_bounded_index(this.grid.length, host.position.x)][Helper.get_bounded_index(this.grid.length, host.position.y)] = host.type;
+    })
   }
 
   update_grid() {
@@ -131,9 +131,9 @@ export class SmallWorld {
     this.temp_landscape_grid = _.cloneDeep(this.landscape_grid);
 
     // Go through all hosts
-    for(let host of this.host_list) {
+    this.host_list.forEach((host, position) => {
       host.simulate(this.temp_landscape_grid, this.host_list);
-    }
+    })
 
     // Update grid
     this.update_grid();
@@ -143,26 +143,32 @@ export class SmallWorld {
 
     // Increase simulation counter
     this.simulation_iterations++;
-    console.log(this.host_list.length)
+    console.log(this.host_list.size)
   }
 
   resolve() {
     let current_state= new Set();
     let conflicts = new Map();
     let speeds = [];
-    let hosts_at_position = []
+    let hosts_at_position = [];
+    let hosts = [];
+
+    this.host_list.forEach((host, position) => {
+      hosts.push(host)
+    })
 
     // Sort hosts by speed (ascending)
-    this.host_list.sort((a, b) => a.current_speed - b.current_speed);
+    hosts.sort((a, b) => a.current_speed - b.current_speed);
 
     // Find conflicts and remove dead hosts
-    for(var i = this.host_list.length -1; i >= 0 ; i--){
+    for(var i = hosts.length -1; i >= 0 ; i--){
       // Remove dead hosts
-      if(this.host_list[i].dead){
-        this.host_list.splice(i, 1);
+      if(hosts[i].dead){
+        this.host_list.delete(hosts[i].position.toString())
+        hosts.splice(i, 1);
       }
       else {
-        let host = this.host_list[i];
+        let host = hosts[i];
         let position = host.position.toString();
         let next_position = host.next_position.toString();
 
@@ -259,13 +265,21 @@ export class SmallWorld {
     current_state.delete(host.position.toString())
 
     // Move
+    this.host_list.delete(host.position.toString())
     host.position = host.next_position.clone();
+    this.host_list.set(host.position.toString(), host);
+
+    // Draw
     this.grid[host.position.x][host.position.y] = host.type;
   }
 
   move_host_until_contact(current_state, key, host) {
     // Wait TODO:Move as far as possible
+    this.host_list.delete(host.position.toString())
     host.next_position = host.position.clone();
+    this.host_list.set(host.position.toString(), host);
+
+    // Draw
     this.grid[host.position.x][host.position.y] = host.type;
   }
 }

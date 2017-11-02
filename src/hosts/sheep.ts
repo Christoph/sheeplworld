@@ -20,7 +20,7 @@ export class Sheep extends Host {
   public simulate(grid, host_list) {
     this.look(grid, host_list);
     this.decide(grid, host_list);
-    this.update_host(host_list);
+    this.update_host();
   }
 
   decide(grid, host_list) {
@@ -57,7 +57,7 @@ export class Sheep extends Host {
     }
 
     if(this.willingness >= this.mating_threshold) {
-      if(this.mate(host_list)) {
+      if(this.mate(grid.length, host_list)) {
         this.mate_weight = this.mate_weight*0.5;
       }
       else {
@@ -79,17 +79,17 @@ export class Sheep extends Host {
 
     total_movement = flock_movement.add(feed_movement).add(mate_movement)
 
-    this.move_host(grid, total_movement.divide(3));
+    this.move_host(grid.length, total_movement.divide(3));
   }
 
-  move_host(grid, total_movement) {
+  move_host(grid_length, total_movement) {
     this.velocity.add(total_movement).limit(this.max_speed)
 
-    this.next_position.add(this.velocity)
+    this.next_position = this.position.clone().add(this.velocity)
 
     this.current_speed = (this.position.distance(this.next_position) - this.max_speed) * -1
 
     // Prepare for discrete grid
-    this.next_position.discretize().wrap(grid.length)
+    this.next_position.discretize().wrap(grid_length)
   }
 }

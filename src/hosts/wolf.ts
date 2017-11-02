@@ -21,7 +21,7 @@ export class Wolf extends Host {
   public simulate(grid, host_list) {
     this.look(grid, host_list);
     this.decide(grid, host_list);
-    this.update_host(host_list);
+    this.update_host();
   }
 
   decide(grid, host_list) {
@@ -45,7 +45,7 @@ export class Wolf extends Host {
     }
 
     if(this.willingness >= this.mating_threshold) {
-      if(this.mate(host_list)) {
+      if(this.mate(grid.length, host_list)) {
         this.mate_weight = this.mate_weight*0.5;
       }
       else {

@@ -38,13 +38,13 @@ export class Host {
 
     // Get initial variables
     this.movement = new Movement(this.movement_type.type);
-    this.willingness = 10;
+    this.willingness = 0;
     this.saturation = 2;
     this.age = 1;
     this .dead = false;
   }
 
-  update_host(host_list) {
+  update_host() {
     this.saturation--;
     this.willingness++;
     this.age++;
@@ -62,28 +62,25 @@ export class Host {
     return this.movement.move(this, neighbors)
   }
 
-  look(grid, host_list) {
+  look(grid, host_list: Map<any, any>) {
     this.neighbors.clear();
     this.surroundings.length = 0;
-
-    // Check for other hosts
-    // TODO: Check only surroundings?
-    for(let host of host_list) {
-      if(host !== this) {
-        let distance = this.position.distance(host.position);
-
-        if(distance <= this.vision_radius ) {
-          this.neighbors.set(host, distance);
-        }
-      }
-    }
+    let vision = this.vision.get_vision_indices(this.position, this.velocity)
 
     // Observe the landscape
-    for(let cell of this.vision.get_vision_indices(this.position, this.velocity)) {
+    for(let cell of vision) {
+      let cell_x = +cell.split(",")[0]
+      let cell_y = +cell.split(",")[1]
+
+      if(host_list.has(cell)) {
+        let host = host_list.get(cell)
+        if(host !== this) this.neighbors.set(host, this.position.distance(host.position));
+      }
+
       this.surroundings.push({
-        d: this.position.distance(new Vector(cell[0], cell[1])),
-        type: grid[Helper.get_bounded_index(grid.length, cell[0])][Helper.get_bounded_index(grid.length, cell[1])],
-        position: new Vector(cell[0], cell[1])
+        d: this.position.distance(new Vector(cell_x, cell_y)),
+        type: grid[Helper.get_bounded_index(grid.length, cell_x)][Helper.get_bounded_index(grid.length, cell_y)],
+        position: new Vector(cell_x, cell_y)
       });
     }
   }
@@ -92,7 +89,7 @@ export class Host {
     let distance = this.vision_radius;
     let partner;
     let most_interesting;
-    let arrousal = 0;
+    let arrousal = -1;
     let found = false;
 
     this.neighbors.forEach((d, n) => {
@@ -110,22 +107,40 @@ export class Host {
     if(found) {
       return this.movement.move_to(this, partner.position)
     }
-    else {
+    else if(this.neighbors.size > 0) {
       return this.movement.move_to(this, most_interesting.position)
+    }
+    else {
+      return this.movement.move_to(this, new Vector(Helper.get_random_float(-1, 1), Helper.get_random_float(-1, 1)).unit())
     }
   }
 
-  mate(host_list) {
+  mate(grid_length, host_list) {
     this.neighbors.forEach((d, n) => {
       if(d < 2 && n.willingness >= this.mating_threshold) {
-        host_list.push(new this.host_type(
-          new Vector(this.position.x, this.position.y),
-          Math.random() > 0.5 ? this.movement_type.desired_separation : n.desired_separation
-        ))
+        let x = this.position.x
+        let y = this.position.y
+
+        let place_of_birth = x+","+y
+
+        while(host_list.has(place_of_birth)) {
+          x = Helper.get_bounded_index(grid_length, x + Helper.get_random_int(-1, 1))
+          y = Helper.get_bounded_index(grid_length, y + Helper.get_random_int(-1, 1))
+
+          place_of_birth = x+","+y
+        }
+
+        host_list.set(
+          place_of_birth,
+          new this.host_type(
+            new Vector(x, y),
+            Math.random() > 0.5 ? this.movement_type.desired_separation : n.desired_separation
+          )
+        )
 
         // Reset willingsness
-        this.willingness = 0;
-        n.willingness = 0;
+        this.willingness = 10;
+        n.willingness = 10;
 
         //Break out of loop
         return true;
