@@ -34,12 +34,28 @@ rect.dirt{
   fill: #d2c254;
 }
 
+rect.carcase {
+  fill: #3e0000;
+}
+
 rect.sheep {
   fill: #f2f2f2;
 }
 
+rect.sheep_adult {
+  fill: #bbb5b5;
+}
+
+rect.sheep_old {
+  fill: #797575;
+}
+
 rect.wolf{
   fill: #554934;
+}
+
+rect.wolf_leader{
+  fill: #535353;
 }
 
 .axis text {
