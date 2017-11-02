@@ -22,6 +22,7 @@ export class Host {
     protected host_type,
     protected position: Vector,
     protected vision_radius,
+    protected vision_type,
     protected mating_threshold,
     protected maximum_age,
     protected max_speed,
@@ -33,7 +34,7 @@ export class Host {
     this.velocity = new Vector(Helper.get_random_float(-1, 1), Helper.get_random_float(-1, 1)).unit()
 
     // Get vision indices class
-    this.vision = new Vision(this.vision_radius)
+    this.vision = new Vision(this.vision_radius, this.vision_type)
 
     // Get initial variables
     this.movement = new Movement(this.movement_type.type);
@@ -78,7 +79,7 @@ export class Host {
     }
 
     // Observe the landscape
-    for(let cell of this.vision.get_vision_indices(this.position)) {
+    for(let cell of this.vision.get_vision_indices(this.position, this.velocity)) {
       this.surroundings.push({
         d: this.position.distance(new Vector(cell[0], cell[1])),
         type: grid[Helper.get_bounded_index(grid.length, cell[0])][Helper.get_bounded_index(grid.length, cell[1])],

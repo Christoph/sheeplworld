@@ -9,6 +9,9 @@ export class Movement {
     if(this.type == "flock") {
       return this.flock(host, neighbors)
     }
+    else if(this.type == "pack") {
+      return this.pack(host, neighbors)
+    }
     else {
       return "Unknown Type"
     }
@@ -27,6 +30,14 @@ export class Movement {
   }
 
   private flock(host, neighbors: Map<any, any>) {
+    let separation: Vector = this.separate(host, neighbors).multiply(4)
+    let alignment: Vector = this.align(neighbors).multiply(2)
+    let cohesion: Vector = this.cohere(host, neighbors)
+
+    return separation.add(alignment).add(cohesion)
+  }
+
+  private pack(host, neighbors: Map<any, any>) {
     let separation: Vector = this.separate(host, neighbors).multiply(4)
     let alignment: Vector = this.align(neighbors).multiply(2)
     let cohesion: Vector = this.cohere(host, neighbors)

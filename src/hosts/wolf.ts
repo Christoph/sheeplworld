@@ -4,7 +4,7 @@ import {Movement} from "./movements"
 import {Vision} from "./vision"
 import {Host} from "./host"
 
-export class Sheep extends Host {
+export class Wolf extends Host {
   // Attributes
   public current_speed = 0;
 
@@ -12,8 +12,9 @@ export class Sheep extends Host {
   private flock_weight = 1;
   private feed_weight = 1;
 
+  // css class, ts class, position, vision radius, mating_threshold, max age, max speed, move type
   constructor(protected position: Vector, protected desired_separation) {
-    super("sheep", Sheep, position, 7, "radius", 20, 60, 1, {type:"flock", herding_range: 5, desired_separation: desired_separation});
+    super("wolf", Wolf, position, 10, "cone", 20, 60, 1, {type:"pack", herding_range: 5, desired_separation: desired_separation});
   }
 
   // Basic decision function
@@ -24,27 +25,14 @@ export class Sheep extends Host {
   }
 
   decide(grid, host_list) {
-    // let sheeps_around = [];
-    // let predators_around = [];
-
     this.mate_weight = 1;
     this.flock_weight = 1;
     this.feed_weight = 1;
 
-    let flock_movement: Vector;
+    let pack_movement: Vector;
     let feed_movement: Vector;
     let mate_movement: Vector;
     let total_movement: Vector;
-
-    // Analyse surroundings
-    // this.neighbors.forEach((value, key) => {
-    //   if(key.type == "sheep" && value <= this.vision_radius) {
-    //     sheeps_around.push(key);
-    //   }
-    //   if(key.type == "wolf" && value <= this.vision_radius) {
-    //     predators_around.push(key)
-    //   }
-    // })
 
     // decide based on importance
     if(this.hungry()) {
@@ -65,19 +53,15 @@ export class Sheep extends Host {
       }
     }
 
-    // if(predators_around.length > 0) {
-    //   this.mate_weight = this.mate_weight*0.1;
-    //   this.flock_weight = this.flock_weight*2;
-    // }
-    flock_movement = this.move(this.neighbors)
+    pack_movement = this.move(this.neighbors)
     feed_movement = this.feed(this.surroundings)
     mate_movement = this.find_partner()
 
-    flock_movement.multiply(this.flock_weight);
+    pack_movement.multiply(this.flock_weight);
     feed_movement.multiply(this.feed_weight);
     mate_movement.multiply(this.mate_weight)
 
-    total_movement = flock_movement.add(feed_movement).add(mate_movement)
+    total_movement = pack_movement.add(feed_movement).add(mate_movement)
 
     this.move_host(grid, total_movement.divide(3));
   }
