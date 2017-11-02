@@ -163,7 +163,7 @@ export class SmallWorld {
     // Find conflicts and remove dead hosts
     for(var i = hosts.length -1; i >= 0 ; i--){
       // Remove dead hosts
-      if(hosts[i].dead){
+      if(hosts[i].gone){
         this.host_list.delete(hosts[i].position.toString())
         hosts.splice(i, 1);
       }

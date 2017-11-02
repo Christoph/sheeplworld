@@ -13,6 +13,7 @@ export class Host {
   protected saturation;
   protected willingness;
   protected movement;
+  protected gone;
 
   protected neighbors = new Map();
   protected surroundings = [];
@@ -20,6 +21,7 @@ export class Host {
   constructor(
     protected type,
     protected host_type,
+    protected size,
     protected position: Vector,
     protected vision_radius,
     protected vision_type,
@@ -41,21 +43,8 @@ export class Host {
     this.willingness = 0;
     this.saturation = 2;
     this.age = 1;
-    this .dead = false;
-  }
-
-  update_host() {
-    this.saturation--;
-    this.willingness++;
-    this.age++;
-
-    if(this.saturation <= 0) {
-      this.dead = true;
-    }
-
-    if(this.age > this.maximum_age) {
-      this.dead = true;
-    }
+    this.dead = false;
+    this.gone = false;
   }
 
   move(neighbors: Map<any, any>) {

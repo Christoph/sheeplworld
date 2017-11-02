@@ -12,9 +12,9 @@ export class Wolf extends Host {
   private flock_weight = 1;
   private feed_weight = 1;
 
-  // css class, ts class, position, vision radius, mating_threshold, max age, max speed, move type
+  // css class, ts class, size, position, vision radius, mating_threshold, max age, max speed, move type
   constructor(protected position: Vector, protected desired_separation) {
-    super("wolf", Wolf, position, 10, "cone", 20, 60, 1, {type:"pack", herding_range: 5, desired_separation: desired_separation});
+    super("wolf", Wolf, 2, position, 10, "cone", 20, 80, 3, {type:"pack", herding_range: 5, desired_separation: desired_separation});
   }
 
   // Basic decision function
@@ -22,6 +22,24 @@ export class Wolf extends Host {
     this.look(grid, host_list);
     this.decide(grid, host_list);
     this.update_host();
+  }
+
+  update_host() {
+    this.saturation--;
+    this.willingness++;
+    this.age++;
+
+    if(this.saturation <= 0) {
+      this.dead = true;
+      this.type = "carcase"
+    }
+
+    if(this.age > this.maximum_age) {
+      this.dead = true;
+    }
+
+    if(this.age > this.maximum_age*(1/3)) this.type = "sheep_adult"
+    if(this.age > this.maximum_age*(2/3)) this.type = "sheep_old"
   }
 
   decide(grid, host_list) {

@@ -12,15 +12,48 @@ export class Sheep extends Host {
   private flock_weight = 1;
   private feed_weight = 1;
 
+  // css class, ts class, size, position, vision radius, mating_threshold, max age, max speed, move type
   constructor(protected position: Vector, protected desired_separation) {
-    super("sheep", Sheep, position, 7, "radius", 20, 60, 1, {type:"flock", herding_range: 5, desired_separation: desired_separation});
+    super("sheep", Sheep, 5, position, 7, "radius", 20, 60, 1, {type:"flock", herding_range: 5, desired_separation: desired_separation});
   }
 
   // Basic decision function
   public simulate(grid, host_list) {
-    this.look(grid, host_list);
-    this.decide(grid, host_list);
-    this.update_host();
+    if(!this.dead) {
+      this.look(grid, host_list);
+      this.decide(grid, host_list);
+      this.update_host();
+    }
+    else {
+      this.vanish();
+    }
+  }
+
+  update_host() {
+    this.saturation--;
+    this.willingness++;
+    this.age++;
+
+    if(this.age > this.maximum_age*(1/3)) this.type = "sheep_adult"
+    if(this.age > this.maximum_age*(2/3)) this.type = "sheep_old"
+
+    if(this.saturation <= 0) {
+      this.dead = true;
+      this.type = "carcase"
+    }
+
+    if(this.age > this.maximum_age) {
+      this.dead = true;
+      this.type = "carcase"
+    }
+  }
+
+  vanish() {
+    this.size--;
+
+    if(this.size < 0) {
+      this.gone = true;
+    }
   }
 
   decide(grid, host_list) {
