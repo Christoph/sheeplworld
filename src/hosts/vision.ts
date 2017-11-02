@@ -58,7 +58,9 @@ export class Vision {
     let out = [];
 
     for(let cell of this.indices) {
-      out.push([position.x + cell[0], position.y + cell[1]])
+      let x = position.x+cell[0]
+      let y = position.y + cell[1]
+      out.push(x+","+y)
     }
 
     return out
