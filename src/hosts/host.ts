@@ -2,6 +2,7 @@ import {Vector} from "../helper/vector"
 import {Helper} from "../helper/helper"
 import {Movement} from "./movements"
 import {Vision} from "./vision"
+import {Landscape} from "../models/landscape"
 
 export class Host {
   // General variables
@@ -51,7 +52,7 @@ export class Host {
     return this.movement.move(this, neighbors)
   }
 
-  look(grid, host_list: Map<any, any>) {
+  look(landscape: Landscape, host_list: Map<any, any>) {
     this.neighbors.clear();
     this.surroundings.length = 0;
     let vision = this.vision.get_vision_indices(this.position, this.velocity)
@@ -68,7 +69,7 @@ export class Host {
 
       this.surroundings.push({
         d: this.position.distance(new Vector(cell_x, cell_y)),
-        type: grid[Helper.get_bounded_index(grid.length, cell_x)][Helper.get_bounded_index(grid.length, cell_y)],
+        type: landscape.grid[Helper.get_bounded_index(landscape.grid.length, cell_x)][Helper.get_bounded_index(landscape.grid.length, cell_y)],
         position: new Vector(cell_x, cell_y)
       });
     }
@@ -139,22 +140,10 @@ export class Host {
     return false
   }
 
-  eat(grid) {
-    let type = grid[this.position.x][this.position.y];
+  eat(landscape) {
+    let energy = landscape.eat(this.position)
 
-    if(type == "grass_fresh") {
-      this.saturation += 5;
-      grid[this.position.x][this.position.y] = "grass"
-
-      return true
-    }
-    else if(type == "grass") {
-      this.saturation += 2;
-
-      return true
-    }
-
-    return false
+    this.saturation += energy;
   }
 
   // Looking for fresh grass

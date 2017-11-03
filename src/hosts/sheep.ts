@@ -3,6 +3,7 @@ import {Helper} from "../helper/helper"
 import {Movement} from "./movements"
 import {Vision} from "./vision"
 import {Host} from "./host"
+import {Landscape} from "../models/landscape"
 
 export class Sheep extends Host {
   // Attributes
@@ -18,10 +19,10 @@ export class Sheep extends Host {
   }
 
   // Basic decision function
-  public simulate(grid, host_list) {
+  public simulate(landscape: Landscape, host_list) {
     if(!this.dead) {
-      this.look(grid, host_list);
-      this.decide(grid, host_list);
+      this.look(landscape, host_list);
+      this.decide(landscape, host_list);
       this.update_host();
     }
     else {
@@ -31,7 +32,9 @@ export class Sheep extends Host {
 
   update_host() {
     this.saturation--;
+
     this.willingness++;
+
     this.age++;
 
     if(this.age > this.maximum_age*(1/3)) this.type = "sheep_adult"
@@ -56,10 +59,7 @@ export class Sheep extends Host {
     }
   }
 
-  decide(grid, host_list) {
-    // let sheeps_around = [];
-    // let predators_around = [];
-
+  decide(landscape: Landscape, host_list) {
     this.mate_weight = 1;
     this.flock_weight = 1;
     this.feed_weight = 1;
@@ -69,19 +69,11 @@ export class Sheep extends Host {
     let mate_movement: Vector;
     let total_movement: Vector;
 
-    // Analyse surroundings
-    // this.neighbors.forEach((value, key) => {
-    //   if(key.type == "sheep" && value <= this.vision_radius) {
-    //     sheeps_around.push(key);
-    //   }
-    //   if(key.type == "wolf" && value <= this.vision_radius) {
-    //     predators_around.push(key)
-    //   }
-    // })
-
     // decide based on importance
     if(this.hungry()) {
-      if(this.eat(grid)) {
+      this.eat(landscape)
+
+      if(this.saturation > 15) {
         this.feed_weight = this.feed_weight*0.5;
       }
       else {
@@ -90,7 +82,7 @@ export class Sheep extends Host {
     }
 
     if(this.willingness >= this.mating_threshold) {
-      if(this.mate(grid.length, host_list)) {
+      if(this.mate(landscape.grid.length, host_list)) {
         this.mate_weight = this.mate_weight*0.5;
       }
       else {
@@ -112,7 +104,7 @@ export class Sheep extends Host {
 
     total_movement = flock_movement.add(feed_movement).add(mate_movement)
 
-    this.move_host(grid.length, total_movement.divide(3));
+    this.move_host(landscape.grid.length, total_movement.divide(3));
   }
 
   move_host(grid_length, total_movement) {

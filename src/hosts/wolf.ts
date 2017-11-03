@@ -18,9 +18,9 @@ export class Wolf extends Host {
   }
 
   // Basic decision function
-  public simulate(grid, host_list) {
+  public simulate(grid, landscape_changes, host_list) {
     this.look(grid, host_list);
-    this.decide(grid, host_list);
+    this.decide(grid, landscape_changes, host_list);
     this.update_host();
   }
 
@@ -42,7 +42,7 @@ export class Wolf extends Host {
     if(this.age > this.maximum_age*(2/3)) this.type = "sheep_old"
   }
 
-  decide(grid, host_list) {
+  decide(grid, landscape_changes, host_list) {
     this.mate_weight = 1;
     this.flock_weight = 1;
     this.feed_weight = 1;

@@ -2,6 +2,7 @@ import {autoinject} from 'aurelia-framework';
 import {Helper} from "../helper/helper"
 import {Sheep} from "../hosts/sheep"
 import {Vector} from "../helper/vector"
+import {Landscape} from "./landscape"
 import * as d3 from "d3"
 import * as _ from "lodash"
 
@@ -13,9 +14,8 @@ declare var Noise: any;
 export class SmallWorld {
   // Grid params
   noise;
+  landscape;
   grid_length = 100;
-  landscape_grid = [];
-  temp_landscape_grid = [];
   host_list = new Map();
 
   // Global params
@@ -24,6 +24,7 @@ export class SmallWorld {
 
   constructor(private grid) {
       this.noise = new Noise()
+      this.landscape = new Landscape(this.grid_length)
   }
 
   get_random_int(min, max) {
@@ -35,39 +36,12 @@ export class SmallWorld {
     this.grid.length = 0;
     this.simulation_iterations = 0;
 
-    // Create noisemap for the landscape
-    let noise_map = [];
-    this.noise.seed(Math.random());
-
-    for(let i = 0; i < this.grid_length; i++) {
-      let temp = []
-      for(let j = 0; j < this.grid_length; j++) {
-        temp[j] = this.noise.simplex2(i/50, j/50)
-      }
-      noise_map.push(temp)
-    }
-
-    // Initilize landscape
-    for(let i = 0; i < this.grid_length; i++) {
-      let temp_landscape = []
-
-      for(let j = 0; j < this.grid_length; j++) {
-        // Landscape
-        let value = "grass"
-        if(noise_map[i][j] <= 0) {
-          value = "grass_fresh";
-        }
-        else {
-          value = "dirt"
-        }
-        temp_landscape[j] = value;
-      }
-      this.landscape_grid.push(temp_landscape)
-    }
+    // Initialize landscape
+    this.landscape.init()
 
     // Add initial data to grid
     for(let i = 0; i < this.grid_length; i++) {
-      this.grid.push(_.clone(this.landscape_grid[i]))
+      this.grid.push(_.clone(this.landscape.grid[i]))
     }
   }
 
@@ -79,7 +53,7 @@ export class SmallWorld {
     while(!found) {
       let x = this.get_random_int(0,this.grid_length-1);
       let y = this.get_random_int(0,this.grid_length-1)
-      if(this.landscape_grid[x][y] == "grass_fresh") {
+      if(this.landscape.grid[x][y] == "grass_fresh") {
         found = true;
         positions.set(x+":"+y, [x, y])
       }
@@ -93,7 +67,7 @@ export class SmallWorld {
       let new_x = Helper.get_bounded_index(this.grid.length, start[0] + this.get_random_int(-1,1))
       let new_y = Helper.get_bounded_index(this.grid.length, start[1] + this.get_random_int(-1,1))
 
-      if(!positions.has(new_x+":"+new_y) && this.landscape_grid[new_x][new_y] == "grass_fresh") {
+      if(!positions.has(new_x+":"+new_y) && this.landscape.grid[new_x][new_y] == "grass_fresh") {
         positions.set(new_x+":"+new_y, [new_x, new_y])
       }
     }
@@ -114,31 +88,27 @@ export class SmallWorld {
   }
 
   update_grid() {
-    this.landscape_grid.length = 0;
     this.grid.length = 0;
 
-    for(let i = 0; i < this.grid_length; i++) {
-      // Copy temp to working grids
-      this.landscape_grid.push(_.clone(this.temp_landscape_grid[i]))
+    // Update landscape
+    this.landscape.update();
 
+    for(let i = 0; i < this.grid_length; i++) {
       // Add landscape changes
-      this.grid.push(_.clone(this.landscape_grid[i]))
+      this.grid.push(_.clone(this.landscape.grid[i]))
     }
   }
 
   run_iteration() {
-    // Create temporary grid for this iteration
-    this.temp_landscape_grid = _.cloneDeep(this.landscape_grid);
-
-    // Go through all hosts
+    // Simulate all hosts
     this.host_list.forEach((host, position) => {
-      host.simulate(this.temp_landscape_grid, this.host_list);
+      host.simulate(this.landscape, this.host_list);
     })
 
     // Update grid
     this.update_grid();
 
-    // Resolve deciscions
+    // Resolve host deciscions
     this.resolve()
 
     // Increase simulation counter
