@@ -3,12 +3,7 @@ import {Helper} from "../helper/helper"
 import {Sheep} from "../hosts/sheep"
 import {Vector} from "../helper/vector"
 import {Landscape} from "./landscape"
-import * as d3 from "d3"
 import * as _ from "lodash"
-
-// This magic line removed the error messages for numeric
-declare var lobos: any;
-declare var Noise: any;
 
 @autoinject
 export class SmallWorld {
@@ -23,12 +18,7 @@ export class SmallWorld {
   simulation_iterations = 0;
 
   constructor(private grid) {
-      this.noise = new Noise()
       this.landscape = new Landscape(this.grid_length)
-  }
-
-  get_random_int(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   init_simulation() {
@@ -51,8 +41,8 @@ export class SmallWorld {
 
     // Find grass area
     while(!found) {
-      let x = this.get_random_int(0,this.grid_length-1);
-      let y = this.get_random_int(0,this.grid_length-1)
+      let x = Helper.get_random_int(0,this.grid_length-1);
+      let y = Helper.get_random_int(0,this.grid_length-1)
       if(this.landscape.grid[x][y] == "grass_fresh") {
         found = true;
         positions.set(x+":"+y, [x, y])
@@ -64,8 +54,8 @@ export class SmallWorld {
       let index = Math.floor(Math.random()*positions.size);
       let start = Array.from(positions.values())[index]
 
-      let new_x = Helper.get_bounded_index(this.grid.length, start[0] + this.get_random_int(-1,1))
-      let new_y = Helper.get_bounded_index(this.grid.length, start[1] + this.get_random_int(-1,1))
+      let new_x = Helper.get_bounded_index(this.grid.length, start[0] + Helper.get_random_int(-1,1))
+      let new_y = Helper.get_bounded_index(this.grid.length, start[1] + Helper.get_random_int(-1,1))
 
       if(!positions.has(new_x+":"+new_y) && this.landscape.grid[new_x][new_y] == "grass_fresh") {
         positions.set(new_x+":"+new_y, [new_x, new_y])
