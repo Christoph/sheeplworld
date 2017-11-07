@@ -55,8 +55,10 @@ export class Vector {
       return this
     }
     else {
-      this.x = this.x / v
-      this.y = this.y / v
+      if(v > 0 || v < 0) {
+        this.x = this.x / v
+        this.y = this.y / v
+      }
 
       return this
     }
@@ -89,8 +91,11 @@ export class Vector {
 
   unit() {
     let length = this.length();
-    this.x = this.x/length
-    this.y = this.y/length
+
+    if(length != 0) {
+      this.x = this.x/length
+      this.y = this.y/length
+    }
 
     return this
   }
