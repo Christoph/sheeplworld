@@ -23,9 +23,9 @@ export class Host {
   protected current_speed = 0;
 
   protected vision_radius = 7;
-  protected maximum_age = 90;
+  protected maximum_age = 60;
   protected required_food = 4;
-  protected mating_threshold = 9;
+  protected mating_threshold = 6;
   protected max_speed = 2;
   protected mass = 2;
 
@@ -62,31 +62,31 @@ export class Host {
 
   set_reproduction(reproduction) {
     if(reproduction == "fast") {
-      this.maximum_age = Math.round(this.maximum_age * 0.5);
-      this.mating_threshold = Math.round(this.mating_threshold * 0.5);
+      this.maximum_age = 30;
+      this.mating_threshold = 3;
       this.required_food++;
     }
     else if(reproduction == "slow") {
-      this.maximum_age = Math.round(this.maximum_age * 2);
-      this.mating_threshold = Math.round(this.mating_threshold * 2);
+      this.maximum_age = 90;
+      this.mating_threshold = 9;
       this.required_food--;
     }
   }
 
   set_speed(speed) {
     if(speed == "fast") {
-      this.max_speed = Math.round(this.max_speed * 2);
+      this.max_speed++;
       this.required_food++;
     }
     else if(speed == "slow") {
-      this.max_speed = Math.round(this.max_speed * 0.5);
+      this.max_speed--;
       this.required_food--;
     }
   }
 
   set_size(size) {
     if(size == "small") {
-      this.mass = Math.round(this.mass * 0.5);
+      this.mass--;
       this.inertia = 1;
       this.required_food--;
       this.vision_radius--;
@@ -95,7 +95,7 @@ export class Host {
       this.inertia = 0.66;
     }
     else if(size == "big") {
-      this.mass = Math.round(this.mass * 2);
+      this.mass++;
       this.inertia = 0.33;
       this.required_food++;
       this.vision_radius++;
@@ -112,6 +112,32 @@ export class Host {
     }
     else if(reproduction == "herbi") {
       this.food_type = "plant"
+    }
+  }
+
+  update() {
+    // Living
+    this.saturation = this.saturation - this.required_food;
+    this.willingness++;
+    this.age++;
+
+    // Aging
+    if(this.age > this.maximum_age*(1/3)) {
+      this.type = "sheep_adult"
+      this.inertia = Math.max(this.inertia - 0.33, 0.33)
+    }
+    if(this.age > this.maximum_age*(2/3)) {
+      this.type = "sheep_old"
+      this.max_speed = Math.max(this.max_speed - 1, 1)
+      this.vision_radius--;
+      this.required_food = Math.max(this.required_food - 1, 1)
+      this.mating_threshold = this.mating_threshold * 1.25
+    }
+
+    // Dying
+    if(this.saturation <= 0 || this.age > this.maximum_age) {
+      this.dead = true;
+      this.type = "carcase"
     }
   }
 

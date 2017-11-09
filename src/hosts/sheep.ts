@@ -24,7 +24,6 @@ export class Sheep extends Host {
       if(this.tick_counter < 3) {
         this.look(landscape, host_list);
         this.decide(landscape, host_list);
-        // this.move(landscape);
         this.tick_counter++;
       }
       else {
@@ -35,30 +34,6 @@ export class Sheep extends Host {
 
     if(this.type == "carcase") {
       this.vanish();
-    }
-  }
-
-  update() {
-    // Living
-    this.saturation = this.saturation - this.required_food;
-    this.willingness++;
-    this.age++;
-
-    // Aging
-    if(this.age > this.maximum_age*(1/3)) {
-      this.type = "sheep_adult"
-      this.inertia = Math.max(this.inertia - 0.33, 0.33)
-    }
-    if(this.age > this.maximum_age*(2/3)) {
-      this.type = "sheep_old"
-      this.max_speed = Math.max(this.max_speed - 1, 1)
-      this.vision_radius--;
-    }
-
-    // Dying
-    if(this.saturation <= 0 || this.age > this.maximum_age) {
-      this.dead = true;
-      this.type = "carcase"
     }
   }
 
