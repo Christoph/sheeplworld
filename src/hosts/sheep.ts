@@ -45,8 +45,14 @@ export class Sheep extends Host {
     this.age++;
 
     // Aging
-    if(this.age > this.maximum_age*(1/3)) this.type = "sheep_adult"
-    if(this.age > this.maximum_age*(2/3)) this.type = "sheep_old"
+    if(this.age > this.maximum_age*(1/3)) {
+      this.type = "sheep_adult"
+      this.inertia = Math.max(this.inertia - 0.33, 0.33)
+    }
+    if(this.age > this.maximum_age*(2/3)) {
+      this.type = "sheep_old"
+      this.max_speed = Math.max(this.max_speed - 1, 1)
+    }
 
     // Dying
     if(this.saturation <= 0 || this.age > this.maximum_age) {
