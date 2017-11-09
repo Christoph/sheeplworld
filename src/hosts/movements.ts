@@ -52,7 +52,7 @@ export class Movement {
       sum.add(n.position)
     })
 
-    return this.move_to(host, sum.divide(neighbors.size))
+    return this.move_to(host, sum)
   }
 
   private align(neighbors: Map<any, any>) {
@@ -61,10 +61,6 @@ export class Movement {
     neighbors.forEach((d, n) => {
       mean.add(n.velocity)
     })
-
-    if(mean.length() > 0) {
-      mean.divide(neighbors.size)
-    }
 
     return mean
   }
@@ -86,10 +82,6 @@ export class Movement {
         counter++;
       }
     })
-
-    if(mean.length() > 0) {
-      mean.divide(counter)
-    }
 
     return mean
   }

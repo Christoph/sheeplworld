@@ -55,7 +55,7 @@ export class Landscape {
 
   regrow() {
     this.changes.forEach( (cell, key) => {
-      if(cell.timer >= 50) {
+      if(cell.timer >= 100) {
         this.temp_grid[cell.position.x][cell.position.y] = cell.old
         this.changes.delete(cell.position.toString());
       }
@@ -70,7 +70,7 @@ export class Landscape {
     let energy = 0;
 
     if(type == "grass_fresh") {
-      energy = 4;
+      energy = 10;
       this.temp_grid[position.x][position.y] = "grass"
 
       this.changes.set(
@@ -83,7 +83,7 @@ export class Landscape {
       })
     }
     else if(type == "grass") {
-      energy = 1;
+      energy = 5;
 
       if(this.changes.has(position.toString())) {
         this.changes.get(position.toString()).timer = 0;

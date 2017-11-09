@@ -14,7 +14,7 @@ export class Wolf extends Host {
 
   // css class, ts class, size, position, vision radius, mating_threshold, max age, max speed, move type
   constructor(protected position: Vector, protected desired_separation) {
-    super("wolf", Wolf, 2, position, 10, "cone", 20, 80, 3, {type:"pack", herding_range: 5, desired_separation: desired_separation});
+    super("wolf", Wolf, position, {type:"pack", herding_range: 5, desired_separation: desired_separation}, "cone", "medium", "medium", "medium", "carni");
   }
 
   // Basic decision function
@@ -71,8 +71,8 @@ export class Wolf extends Host {
       }
     }
 
-    pack_movement = this.move(this.neighbors)
-    feed_movement = this.feed(this.surroundings)
+    // pack_movement = this.move(this.neighbors)
+    // feed_movement = this.feed(this.surroundings)
     mate_movement = this.find_partner()
 
     pack_movement.multiply(this.flock_weight);
@@ -81,7 +81,7 @@ export class Wolf extends Host {
 
     total_movement = pack_movement.add(feed_movement).add(mate_movement)
 
-    this.move_host(grid, total_movement.divide(3));
+    this.move_host(grid, total_movement);
   }
 
   move_host(grid, total_movement) {

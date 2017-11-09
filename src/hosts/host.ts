@@ -8,13 +8,26 @@ export class Host {
   // General variables
   protected next_position;
   protected velocity;
+
   protected vision;
-  protected dead;
-  protected age;
-  protected saturation;
-  protected willingness;
   protected movement;
-  protected gone;
+  protected food_type;
+  protected direction;
+  protected inertia;
+
+  protected dead = false;
+  protected age = 1;
+  protected saturation = 2;
+  protected willingness = 0;
+  protected gone = false;
+  protected current_speed = 0;
+
+  protected vision_radius = 7;
+  protected maximum_age = 90;
+  protected required_food = 4;
+  protected mating_threshold = 9;
+  protected max_speed = 2;
+  protected mass = 2;
 
   protected neighbors = new Map();
   protected surroundings = [];
@@ -22,34 +35,84 @@ export class Host {
   constructor(
     protected type,
     protected host_type,
-    protected size,
     protected position: Vector,
-    protected vision_radius,
-    protected vision_type,
-    protected mating_threshold,
-    protected maximum_age,
-    protected max_speed,
-    protected movement_type
+    protected movement_type,
+    vision_type,
+    size,
+    reproduction,
+    max_speed,
+    food_type
   ) {
-    // Initialize next position
+    // Initialize constant variables
+    this.set_speed(max_speed)
+    this.set_reproduction(reproduction);
+    this.set_food(food_type)
+    this.set_size(size);
+
+    this.saturation = this.required_food * 2;
+
+    this.vision = new Vision(this.vision_radius, vision_type)
+    this.movement = new Movement(movement_type.type);
+    this.movement_type.herding_range = this.vision_radius
+
+    // Initialize changing variables
     this.next_position = position.clone()
-    // Initialize with random direction
     this.velocity = new Vector(Helper.get_random_float(-1, 1), Helper.get_random_float(-1, 1)).unit()
-
-    // Get vision indices class
-    this.vision = new Vision(this.vision_radius, this.vision_type)
-
-    // Get initial variables
-    this.movement = new Movement(this.movement_type.type);
-    this.willingness = 0;
-    this.saturation = 2;
-    this.age = 1;
-    this.dead = false;
-    this.gone = false;
   }
 
-  move(neighbors: Map<any, any>) {
-    return this.movement.move(this, neighbors)
+  set_reproduction(reproduction) {
+    if(reproduction == "fast") {
+      this.maximum_age = Math.round(this.maximum_age * 0.5);
+      this.mating_threshold = Math.round(this.mating_threshold * 0.5);
+      this.required_food++;
+    }
+    else if(reproduction == "slow") {
+      this.maximum_age = Math.round(this.maximum_age * 2);
+      this.mating_threshold = Math.round(this.mating_threshold * 2);
+      this.required_food--;
+    }
+  }
+
+  set_speed(speed) {
+    if(speed == "fast") {
+      this.max_speed = Math.round(this.max_speed * 2);
+      this.required_food++;
+    }
+    else if(speed == "slow") {
+      this.max_speed = Math.round(this.max_speed * 0.5);
+      this.required_food--;
+    }
+  }
+
+  set_size(size) {
+    if(size == "small") {
+      this.mass = Math.round(this.mass * 0.5);
+      this.inertia = 1;
+      this.required_food--;
+      this.vision_radius--;
+    }
+    else if(size == "medium") {
+      this.inertia = 0.66;
+    }
+    else if(size == "big") {
+      this.mass = Math.round(this.mass * 2);
+      this.inertia = 0.33;
+      this.required_food++;
+      this.vision_radius++;
+    }
+  }
+
+  set_food(reproduction) {
+    if(reproduction == "carni") {
+      this.food_type = "meat"
+    }
+    else if(reproduction == "omni") {
+      this.food_type = "all"
+      this.required_food++;
+    }
+    else if(reproduction == "herbi") {
+      this.food_type = "plant"
+    }
   }
 
   look(landscape: Landscape, host_list: Map<any, any>) {
@@ -64,7 +127,7 @@ export class Host {
 
       if(host_list.has(cell)) {
         let host = host_list.get(cell)
-        if(host !== this) this.neighbors.set(host, this.position.distance(host.position));
+        if(host !== this && !host.dead) this.neighbors.set(host, this.position.distance(host.position));
       }
 
       this.surroundings.push({
@@ -73,6 +136,46 @@ export class Host {
         position: new Vector(cell_x, cell_y)
       });
     }
+  }
+
+  move_host(grid_length, total_movement) {
+    this.velocity.add(total_movement).limit(this.max_speed)
+
+    this.next_position = this.position.clone().add(this.velocity)
+
+    this.current_speed = (this.position.distance(this.next_position) - this.max_speed) * -1
+
+    // Prepare for discrete grid
+    this.next_position.discretize().wrap(grid_length)
+  }
+
+  stay() {
+    this.next_position = this.position.clone()
+  }
+
+  flee(carnivores) {
+    let mean = new Vector(0, 0);
+
+    carnivores.forEach(n => {
+      mean.add(n.position)
+    })
+
+    mean.multiply(-1)
+
+    return mean
+  }
+
+  avoid() {
+    let mean = new Vector(0, 0);
+    let suspicious = Array.from(this.neighbors).filter(([k, v]) => k.dead == true)
+
+    suspicious.forEach(n => {
+      mean.add(n[0].position)
+    })
+
+    mean.multiply(-1)
+
+    return mean
   }
 
   find_partner() {
@@ -129,8 +232,8 @@ export class Host {
         )
 
         // Reset willingsness
-        this.willingness = 10;
-        n.willingness = 10;
+        this.willingness = 0;
+        n.willingness = 0;
 
         //Break out of loop
         return true;
@@ -141,31 +244,64 @@ export class Host {
   }
 
   eat(landscape) {
-    let energy = landscape.eat(this.position)
+    if(this.food_type == "plant") {
+      let energy = landscape.eat(this.position)
 
-    this.saturation += energy;
+      this.saturation += energy;
+    }
   }
 
   // Looking for fresh grass
-  feed(surroundings) {
-    let mean = new Vector(0, 0);
-    let nearest_fresh_grass = surroundings.filter(cell => cell.type == "grass_fresh")
-    let nearest_distance = Math.min(this.vision_radius, Math.min.apply(Math, nearest_fresh_grass.map(function(o){return o.d;})))
-    let counter = 0;
+  search_food() {
+    if(this.food_type == "plant") {
+      let nearest = new Vector(0, 0);
+      let mean_fresh = new Vector(0, 0);
+      let mean_grass = new Vector(0, 0);
 
-    nearest_fresh_grass.forEach(n => {
-      mean.add(n.position)
-      counter++;
-    })
+      let fresh_grass = this.surroundings.filter(cell => cell.type == "grass_fresh")
+      let nearest_distance = Math.min(this.vision_radius, Math.min.apply(Math, fresh_grass.map(function(o){return o.d;})))
+      let nearest_fresh_grass = fresh_grass.filter(cell => cell.d == nearest_distance)
+      let nearest_grass = this.surroundings.filter(cell => cell.type == "grass")
 
-    return this.movement.move_to(this, mean.divide(counter)).multiply(nearest_distance+1)
+      // Stay if you are on a good spot
+      if(nearest_distance == 0) {
+        return nearest
+      }
+
+      nearest_fresh_grass.forEach(n => {
+        nearest.add(n.position)
+      })
+      nearest.unit().multiply(5)
+
+      fresh_grass.forEach(n => {
+        mean_fresh.add(n.position)
+      })
+      mean_fresh.unit().multiply(2)
+
+      nearest_grass.forEach(n => {
+        mean_grass.add(n.position)
+      })
+      mean_grass.unit()
+
+      return  mean_fresh.add(mean_grass).add(nearest)
+    }
   }
 
   hungry() {
     let rnd = Math.random()
-    if(this.saturation > 8) return false;
-    if(this.saturation <= 8 && this.saturation > 4 && rnd < 0.2) return true;
-    if(this.saturation <= 4 && this.saturation > 1 && rnd < 0.8) return true;
-    if(this.saturation <= 1) return true;
+
+    if(this.saturation > (this.required_food * 6)) return 0.5;
+    if(this.saturation <= (this.required_food * 6) && this.saturation > (this.required_food * 3) && rnd < 0.2) return 1;
+    if(this.saturation <= (this.required_food * 3) && this.saturation > this.required_food && rnd < 0.8) return 1.5;
+    if(this.saturation <= this.required_food) return 2;
+    return 0.75;
+  }
+
+  vanish() {
+    this.mass--;
+
+    if(this.mass < 0) {
+      this.gone = true;
+    }
   }
 }
