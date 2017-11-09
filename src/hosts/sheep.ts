@@ -52,6 +52,7 @@ export class Sheep extends Host {
     if(this.age > this.maximum_age*(2/3)) {
       this.type = "sheep_old"
       this.max_speed = Math.max(this.max_speed - 1, 1)
+      this.vision_radius--;
     }
 
     // Dying
@@ -67,12 +68,13 @@ export class Sheep extends Host {
     this.cautious_weight = 1;
     this.feed_weight = this.hungry();
 
+    let rnd = Math.random();
     let carnivores = Array.from(this.neighbors).filter(([k, v]) => k.food_type == "meat")
 
     if(carnivores.length > 0) {
       this.flee(carnivores);
     }
-    else if(this.feed_weight <= 1 && Math.random() < 0.2)
+    else if(this.feed_weight <= 1 && rnd < 0.2)
     {
       this.eat(landscape);
       this.stay()
@@ -80,7 +82,12 @@ export class Sheep extends Host {
     else if(this.feed_weight > 1)
     {
       this.eat(landscape);
-      this.stay()
+      if(rnd < 0.6) {
+        this.stay()
+      }
+      else {
+        this.move(landscape)
+      }
     }
     else if(this.willingness >= this.mating_threshold) { // or mate
       if(this.mate(landscape.grid.length, host_list)) {
