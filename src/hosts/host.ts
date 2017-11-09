@@ -157,7 +157,7 @@ export class Host {
     let mean = new Vector(0, 0);
 
     carnivores.forEach(n => {
-      mean.add(n.position)
+      mean.add(this.position.clone().subtract(n.position))
     })
 
     mean.multiply(-1)
@@ -170,7 +170,7 @@ export class Host {
     let suspicious = Array.from(this.neighbors).filter(([k, v]) => k.dead == true)
 
     suspicious.forEach(n => {
-      mean.add(n[0].position)
+      mean.add(this.position.clone().subtract(n[0].position))
     })
 
     mean.multiply(-1)
@@ -269,17 +269,17 @@ export class Host {
       }
 
       nearest_fresh_grass.forEach(n => {
-        nearest.add(n.position)
+        nearest.add(n.position.clone().subtract(this.position))
       })
       nearest.unit().multiply(5)
 
       fresh_grass.forEach(n => {
-        mean_fresh.add(n.position)
+        mean_fresh.add(n.position.clone().subtract(this.position))
       })
-      mean_fresh.unit().multiply(2)
+      mean_fresh.unit().multiply(3)
 
       nearest_grass.forEach(n => {
-        mean_grass.add(n.position)
+        mean_grass.add(n.position.clone().subtract(this.position))
       })
       mean_grass.unit()
 
@@ -288,11 +288,9 @@ export class Host {
   }
 
   hungry() {
-    let rnd = Math.random()
-
     if(this.saturation > (this.required_food * 6)) return 0.5;
-    if(this.saturation <= (this.required_food * 6) && this.saturation > (this.required_food * 3) && rnd < 0.2) return 1;
-    if(this.saturation <= (this.required_food * 3) && this.saturation > this.required_food && rnd < 0.8) return 1.5;
+    if(this.saturation <= (this.required_food * 6) && this.saturation > (this.required_food * 3)) return 1;
+    if(this.saturation <= (this.required_food * 3) && this.saturation > this.required_food) return 1.5;
     if(this.saturation <= this.required_food) return 2;
     return 0.75;
   }

@@ -23,11 +23,11 @@ export class Sheep extends Host {
     if(!this.dead) {
       if(this.tick_counter < 3) {
         this.look(landscape, host_list);
-        this.move(landscape);
+        this.decide(landscape, host_list);
+        // this.move(landscape);
         this.tick_counter++;
       }
       else {
-        this.decide(landscape, host_list);
         this.update()
         this.tick_counter = 0;
       }
@@ -65,6 +65,11 @@ export class Sheep extends Host {
 
     if(carnivores.length > 0) {
       this.flee(carnivores);
+    }
+    else if(this.feed_weight <= 1 && Math.random() < 0.2)
+    {
+      this.eat(landscape);
+      this.stay()
     }
     else if(this.feed_weight > 1)
     {
