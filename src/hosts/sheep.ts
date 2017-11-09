@@ -15,7 +15,7 @@ export class Sheep extends Host {
 
   // css class, ts class, position, movement, vision, size, reproduction, speed, food
   constructor(protected position: Vector, protected desired_separation) {
-    super("sheep", Sheep, position, {type:"flock", herding_range: 5, desired_separation: desired_separation}, "radius", "medium", "medium", "slow", "herbi");
+    super("sheep", Sheep, position, {type:"flock", herding_range: 5, desired_separation: desired_separation}, "radius", "big", "medium", "slow", "herbi");
   }
 
   // Every tick
